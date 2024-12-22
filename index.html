@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมบันไดงู</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 2px;
+            margin: 20px auto;
+            width: 520px;
+            height: 520px;
+            background: #f0f0f0;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid #ddd;
+            position: relative;
+            font-size: 10px;
+        }
+
+        .player {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .player-1 {
+            background-color: red;
+        }
+
+        .player-2 {
+            background-color: blue;
+        }
+
+        .ladder,
+        .snake {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+        }
+
+        .ladder {
+            background-image: url('https://dummyimage.com/50x50/8fd400/ffffff&text=L');
+        }
+
+        .snake {
+            background-image: url('https://dummyimage.com/50x50/ff5e5e/ffffff&text=S');
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+
+        #dice-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #dice-popup img {
+            width: 100px;
+            height: 100px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>เกมบันไดงู</h1>
+    <p id="current-player">ผู้เล่นที่กำลังเล่น: ผู้เล่น 1</p>
+    <div id="game-board"></div>
+    <div id="controls">
+        <button id="roll-dice">ทอยลูกเต๋า</button>
+        <p id="dice-result"></p>
+    </div>
+
+    <!-- Popup for dice rolling -->
+    <div id="dice-popup">
+        <img id="dice-image" src="https://via.placeholder.com/100x100?text=🎲" alt="Dice">
+        <p id="popup-message">กำลังทอยลูกเต๋า...</p>
+    </div>
+
+    <script>
+        const board = document.getElementById("game-board");
+        const dicePopup = document.getElementById("dice-popup");
+        const diceImage = document.getElementById("dice-image");
+        const diceResult = document.getElementById("dice-result");
+        const rollDiceButton = document.getElementById("roll-dice");
+        const currentPlayerDisplay = document.getElementById("current-player");
+
+        const players = [
+            { name: "ผู้เล่น 1", position: 0, color: "player-1" },
+            { name: "ผู้เล่น 2", position: 0, color: "player-2" }
+        ];
+        let currentPlayerIndex = 0;
+
+        const ladders = { 3: 22, 5: 8, 11: 26, 20: 29 , 60: 62, 72: 77 , 86: 91, 50:53};
+        const snakes = { 17: 4, 19: 7, 24: 16, 32: 30, 94: 84, 79: 76, 64: 56, 63: 51, 46:44 };
+
+        function createBoard() {
+            for (let i = 1; i <= 100; i++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = i;
+                if (ladders[i]) {
+                    const ladder = document.createElement("div");
+                    ladder.classList.add("ladder");
+                    cell.appendChild(ladder);
+                }
+                if (snakes[i]) {
+                    const snake = document.createElement("div");
+                    snake.classList.add("snake");
+                    cell.appendChild(snake);
+                }
+                board.appendChild(cell);
+            }
+        }
+
+
+        function rollDice() {
+            dicePopup.style.display = "block";
+
+            let counter = 0;
+            const interval = setInterval(() => {
+                const randomNum = Math.floor(Math.random() * 6) + 1;
+                diceImage.src = `https://dummyimage.com/100x100/000/fff&text=${randomNum}`;
+                counter++;
+                if (counter === 10) { // หมุนเลขทั้งหมด 10 ครั้งก่อนแสดงผลจริง
+                    clearInterval(interval);
+                    const diceRoll = Math.floor(Math.random() * 6) + 1; // ผลลัพธ์เต๋าจริง
+                    diceImage.src = `https://dummyimage.com/100x100/000/fff&text=${diceRoll}`;
+                    setTimeout(() => {
+                        dicePopup.style.display = "none";
+                        movePlayer(players[currentPlayerIndex], diceRoll);
+                    }, 1500);
+                }
+            }, 100); // หมุนเลขทุกๆ 100 มิลลิวินาที
+        }
+
+        function movePlayer(player, steps) {
+            let nextPosition = player.position + steps;
+            if (nextPosition > 100) nextPosition = player.position;
+            if (ladders[nextPosition]) nextPosition = ladders[nextPosition];
+            if (snakes[nextPosition]) nextPosition = snakes[nextPosition];
+
+            const playerMarker = document.createElement("div");
+            playerMarker.classList.add("player", player.color);
+
+            board.children[player.position - 1]?.querySelector(`.${player.color}`)?.remove();
+            player.position = nextPosition;
+            board.children[player.position - 1]?.appendChild(playerMarker);
+
+            if (player.position === 100) {
+                alert(`${player.name} ชนะเกมแล้ว!`);
+                rollDiceButton.disabled = true;
+            } else {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                currentPlayerDisplay.textContent = `ผู้เล่นที่กำลังเล่น: ${players[currentPlayerIndex].name}`;
+            }
+        }
+
+        rollDiceButton.addEventListener("click", rollDice);
+
+        function startGame() {
+            createBoard();
+            players.forEach(player => {
+                const marker = document.createElement("div");
+                marker.classList.add("player", player.color);
+                board.children[player.position]?.appendChild(marker);
+            });
+        }
+
+        startGame();
+    </script>
+</body>
+
+</html>
