@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เกมบันไดงู</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
         body {
-            font-family: Arial, sans-serif;
+            font-family: "K2D", sans-serif;
             text-align: center;
         }
 
@@ -22,14 +23,20 @@
             background: #f0f0f0;
         }
 
+        .current-player {
+            font-size: 20px;
+            font-family: "K2D", sans-serif;
+        }
+
         .cell {
+            font-family: "K2D", sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #fff;
             border: 1px solid #ddd;
             position: relative;
-            font-size: 10px;
+            font-size: 16px;
         }
 
         .player {
@@ -56,11 +63,11 @@
         }
 
         .ladder {
-            background-image: url('https://dummyimage.com/50x50/8fd400/ffffff&text=L');
+            background-image: url('https://cdn-icons-png.flaticon.com/128/3989/3989545.png');
         }
 
         .snake {
-            background-image: url('https://dummyimage.com/50x50/ff5e5e/ffffff&text=S');
+            background-image: url('https://cdn-icons-png.flaticon.com/128/5375/5375695.png');
         }
 
         #controls {
@@ -84,7 +91,21 @@
         #dice-popup img {
             width: 100px;
             height: 100px;
-            //animation: spin 1s linear infinite;
+            /*animation: spin 1s linear infinite;*/
+        }
+
+        .button {
+            font-family: "K2D", sans-serif;
+            width: 150px;
+            height: 100%;
+            font-size: 24px;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #f79707;
+            padding:10px;
         }
 
         @keyframes spin {
@@ -101,10 +122,10 @@
 
 <body>
     <h1>เกมบันไดงู</h1>
-    <p id="current-player">ผู้เล่นที่กำลังเล่น: ผู้เล่น 1</p>
+    <p class="current-player" id="current-player">ผู้เล่นที่กำลังเล่น: ผู้เล่น 1</p>
     <div id="game-board"></div>
     <div id="controls">
-        <button id="roll-dice">ทอยลูกเต๋า</button>
+        <button class="button" id="roll-dice">ทอยลูกเต๋า</button>
         <p id="dice-result"></p>
     </div>
 
@@ -159,7 +180,7 @@
                 const randomNum = Math.floor(Math.random() * 6) + 1;
                 diceImage.src = `https://semicon.github.io/SnakesandLadders/img/dice${randomNum}.png`;
                 counter++;
-                if (counter === 10) { // หมุนเลขทั้งหมด 10 ครั้งก่อนแสดงผลจริง
+                if (counter === 20) { // หมุนเลขทั้งหมด 10 ครั้งก่อนแสดงผลจริง
                     clearInterval(interval);
                     const diceRoll = Math.floor(Math.random() * 6) + 1; // ผลลัพธ์เต๋าจริง
                     diceImage.src = `https://semicon.github.io/SnakesandLadders/img/dice${diceRoll}.png`;
