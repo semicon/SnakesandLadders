@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snakes and Ladders</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+        body {
+            font-family: "K2D", sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            font-size: 16px;
+        }
+
+        h1{
+            margin: 10px;
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 2px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .player {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        .snake {
+            background-image: url('https://cdn-icons-png.flaticon.com/128/5375/5375695.png');
+            background-size: cover;
+        }
+
+        .ladder {
+            background-image: url('https://cdn-icons-png.flaticon.com/128/3989/3989545.png');
+            background-size: cover;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .popup-content {
+            font-size: 18px;
+        }
+
+        .popup-close {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #0005;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .dice-image {
+            width: 100px;
+            height: 100px;
+        }
+
+        button .popup-close {
+            color: #000;
+            padding: 10px;
+            background-color: #fff;
+            padding: 5px 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ec6d05;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        label{
+            font-size: 1.25rem;
+            margin: 1em;
+            padding: .25em;
+            border: 0;
+            font-weight: bold;
+            letter-spacing: 0.25rem;
+            border-radius: 0;
+        }
+        
+        select {
+            font-size: 1.25rem;
+            margin: 1em;
+            padding: .25em;
+            border: 0;
+            border-bottom: 2px solid currentcolor;
+            font-weight: bold;
+            letter-spacing: 0.15rem;
+            border-radius: 0;
+
+            &:focus,
+            &:active {
+                outline: 0;
+                border-bottom-color: red;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        
+        <div class="controls">
+            <h1>Snakes and Ladders</h1>
+            <div id="playerSelected">
+                <label for="numPlayers">Number of Players </label><br>
+                <select id="numPlayers" data-selected="">
+                    <option value="" selected="selected" disabled="disabled">Select .....</option>
+                    <option value="2">2 Players</option>
+                    <option value="3">3 Players</option>
+                    <option value="4">4 Players</option>
+                    <option value="5">5 Players</option>
+                  </select><br>
+                <!-- <label for="numPlayers">Number of Players (2-5): </label>
+                <input type="number" id="numPlayers" min="2" max="5" value="2"> -->
+                <button id="startGame">Start Game</button>
+            </div>
+
+            <div id="displayGame" style="display: none;">
+                <div class="board">
+                    <!-- Board cells will be generated dynamically -->
+                </div>
+                <div id="diceResult"></div>
+                <div id="playerTurn"></div>
+                <button id="rollDice">Roll Dice</button>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="popup">
+        <div class="popup-content" id="popupContent"></div>
+        <button class="popup-close" id="popupClose">Close</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const board = document.querySelector('.board');
+            const rollDiceButton = document.getElementById('rollDice');
+            //const diceResult = document.getElementById('diceResult');
+            const playerTurn = document.getElementById('playerTurn');
+            const startGameButton = document.getElementById('startGame');
+            const numPlayersInput = document.getElementById('numPlayers');
+            const popup = document.getElementById('popup');
+            const popupContent = document.getElementById('popupContent');
+            const popupClose = document.getElementById('popupClose');
+
+            const totalCells = 100;
+            let players = [];
+            let currentPlayerIndex = 0;
+            let gameOver = false;
+            let diceInterval;
+
+            // Define snakes and ladders
+            const snakes = {
+                16: 6,
+                33: 14,
+                48: 26,
+                62: 19,
+                88: 24,
+                95: 75,
+                97: 78
+            };
+
+            const ladders = {
+                1: 38,
+                4: 14,
+                9: 31,
+                21: 42,
+                28: 84,
+                36: 44,
+                51: 67,
+                71: 91,
+                80: 100
+            };
+
+            // Generate board cells
+            for (let i = totalCells; i > 0; i--) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.textContent = i;
+                if (snakes[i]) {
+                    cell.classList.add('snake');
+                }
+                if (ladders[i]) {
+                    cell.classList.add('ladder');
+                }
+                board.appendChild(cell);
+            }
+
+            // Initialize players
+            function initializePlayers(numPlayers) {
+                players.length = 0;
+                for (let i = 0; i < numPlayers; i++) {
+                    const player = document.createElement('div');
+                    player.classList.add('player');
+                    player.style.backgroundColor = getRandomColor();
+                    player.dataset.position = '0';
+                    players.push(player);
+                    board.appendChild(player);
+                }
+                currentPlayerIndex = 0;
+                gameOver = false;
+                updatePlayerTurn();
+            }
+
+            // Roll dice
+            rollDiceButton.addEventListener('click', function () {
+                if (gameOver) return;
+
+                showDiceRollingPopup();
+
+                setTimeout(() => {
+                    const diceValue = Math.floor(Math.random() * 6) + 1;
+                    //diceResult.textContent = `Dice: ${diceValue}`;
+                    clearInterval(diceInterval);
+                    popupContent.innerHTML = `<img src="https://semicon.github.io/SnakesandLadders/img/dice${diceValue}.png" class="dice-image" alt="Dice ${diceValue}">`;
+
+                    setTimeout(() => {
+                        popup.style.display = 'none';
+                        popupClose.style.display = 'inline-block'; // Show the close button
+
+                        const currentPlayer = players[currentPlayerIndex];
+                        let currentPosition = parseInt(currentPlayer.dataset.position);
+                        let newPosition = currentPosition + diceValue;
+
+                        if (newPosition > totalCells) {
+                            newPosition = totalCells - (newPosition - totalCells);
+                        }
+
+                        // Check for snakes and ladders
+                        if (snakes[newPosition]) {
+                            newPosition = snakes[newPosition];
+                            showPopup(`<img src="https://cdn-icons-png.flaticon.com/128/5375/5375695.png" class="dice-image"><br>Oh no! You hit a snake and moved to ${newPosition}.`);
+                        } else if (ladders[newPosition]) {
+                            newPosition = ladders[newPosition];
+                            showPopup(`<img src="https://cdn-icons-png.flaticon.com/128/3989/3989545.png" class="dice-image"><br>Yay! You hit a ladder and moved to ${newPosition}.`);
+
+                        }
+
+                        currentPlayer.dataset.position = newPosition;
+                        movePlayer(currentPlayer, newPosition);
+
+                        // Check if the player has won
+                        if (newPosition === totalCells) {
+                            showPopup(`<img src="https://cdn-icons-png.flaticon.com/128/14861/14861055.png" class="dice-image"><br>Player ${currentPlayerIndex + 1} wins!`);
+                            return;
+                        }
+
+                        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                        updatePlayerTurn();
+                    }, 1500); // Show the dice image for 1.5 seconds
+                }, 2000); // Show rolling dice for 2 seconds
+            });
+
+            // Show dice rolling popup
+            function showDiceRollingPopup() {
+                let currentDiceValue = 1;
+                diceInterval = setInterval(() => {
+                    currentDiceValue = (currentDiceValue % 6) + 1;
+                    popupContent.innerHTML = `<img src="https://semicon.github.io/SnakesandLadders/img/dice${currentDiceValue}.png" class="dice-image" alt="Dice ${currentDiceValue}">`;
+                    popup.style.display = 'block';
+                    popupClose.style.display = 'none'; // Hide the close button
+                }, 100);
+            }
+
+            // Move player to new position
+            function movePlayer(player, position) {
+                const cells = document.querySelectorAll('.cell');
+                const targetCell = cells[totalCells - position];
+                const cellRect = targetCell.getBoundingClientRect();
+                const boardRect = board.getBoundingClientRect();
+                const cellCenterX = cellRect.left - boardRect.left + cellRect.width / 2;
+                const cellCenterY = cellRect.top - boardRect.top + cellRect.height / 2;
+                player.style.top = `${cellCenterY}px`;
+                player.style.left = `${cellCenterX}px`;
+            }
+
+            // Update player turn display
+            function updatePlayerTurn() {
+                playerTurn.textContent = `Player ${currentPlayerIndex + 1}'s turn`;
+            }
+
+            // Generate random color for players
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            // Show popup
+            function showPopup(message) {
+                popupContent.innerHTML = message;
+                popup.style.display = 'block';
+                popupClose.style.display = 'inline-block'; // Show the close button
+            }
+
+            // Close popup
+            popupClose.addEventListener('click', function () {
+                popup.style.display = 'none';
+                if (gameOver) {
+                    // Optionally, you can reset the game here
+                    initializePlayers(players.length);
+                }
+            });
+
+            // Start game
+            startGameButton.addEventListener('click', function () {
+                const numPlayers = parseInt(numPlayersInput.value);
+                if (numPlayers >= 2 && numPlayers <= 5) {
+                    initializePlayers(numPlayers);
+                    document.getElementById('displayGame').style.display = 'inline-block';
+                    document.getElementById('playerSelected').style.display = "none"
+                    //rollDiceButton.style.display = 'inline-block';
+                    //startGameButton.style.display = 'none';
+                    numPlayersInput.style.display = 'none';
+                } else {
+                    alert('Please enter a number between 2 and 5.');
+                }
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>
