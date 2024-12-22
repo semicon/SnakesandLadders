@@ -84,7 +84,7 @@
         #dice-popup img {
             width: 100px;
             height: 100px;
-            animation: spin 1s linear infinite;
+            //animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -157,12 +157,12 @@
             let counter = 0;
             const interval = setInterval(() => {
                 const randomNum = Math.floor(Math.random() * 6) + 1;
-                diceImage.src = `https://dummyimage.com/100x100/000/fff&text=${randomNum}`;
+                diceImage.src = `https://semicon.github.io/SnakesandLadders/img/dice${randomNum}.png`;
                 counter++;
                 if (counter === 10) { // หมุนเลขทั้งหมด 10 ครั้งก่อนแสดงผลจริง
                     clearInterval(interval);
                     const diceRoll = Math.floor(Math.random() * 6) + 1; // ผลลัพธ์เต๋าจริง
-                    diceImage.src = `https://dummyimage.com/100x100/000/fff&text=${diceRoll}`;
+                    diceImage.src = `https://semicon.github.io/SnakesandLadders/img/dice${diceRoll}.png`;
                     setTimeout(() => {
                         dicePopup.style.display = "none";
                         movePlayer(players[currentPlayerIndex], diceRoll);
