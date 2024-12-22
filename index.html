@@ -40,18 +40,24 @@
         }
 
         .player {
-            width: 20px;
-            height: 20px;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
             position: absolute;
+            
+        }
+        .player-0 {
+            background-color: rgb(10, 10, 10);
         }
 
         .player-1 {
             background-color: red;
+            color: red;
         }
 
         .player-2 {
             background-color: blue;
+            color: blue;
         }
 
         .ladder,
@@ -71,10 +77,13 @@
         }
 
         #controls {
-            margin-top: 20px;
+            margin: 20px;
+        }
+        .text--center{
+            text-align: center;
         }
 
-        #dice-popup {
+        .dice-popup {
             display: none;
             position: fixed;
             top: 50%;
@@ -88,10 +97,9 @@
             text-align: center;
         }
 
-        #dice-popup img {
+        .dice-popup img {
             width: 100px;
             height: 100px;
-            /*animation: spin 1s linear infinite;*/
         }
 
         .button {
@@ -108,30 +116,23 @@
             padding:10px;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
     </style>
 </head>
 
 <body>
-    <h1>เกมบันไดงู</h1>
-    <p class="current-player" id="current-player">ผู้เล่นที่กำลังเล่น: ผู้เล่น 1</p>
+    <h1>เกมบันไดงู</h1> 
     <div id="game-board"></div>
+
     <div id="controls">
-        <button class="button" id="roll-dice">ทอยลูกเต๋า</button>
-        <p id="dice-result"></p>
+        <p class="current-player">ผู้เล่นที่กำลังเล่น: <span id="current-player"> ผู้เล่น 1</span></p>
+        <div class="text--center">
+            <button class="button" id="roll-dice">ทอยลูกเต๋า</button>
+        </div>
     </div>
 
     <!-- Popup for dice rolling -->
-    <div id="dice-popup">
-        <img id="dice-image" src="https://via.placeholder.com/100x100?text=0" alt="Dice">
+    <div class="dice-popup" id="dice-popup">
+        <img id="dice-image" src="https://semicon.github.io/SnakesandLadders/img/dice1.png" alt="Dice">
         <p id="popup-message">กำลังทอยลูกเต๋า...</p>
     </div>
 
@@ -139,7 +140,7 @@
         const board = document.getElementById("game-board");
         const dicePopup = document.getElementById("dice-popup");
         const diceImage = document.getElementById("dice-image");
-        const diceResult = document.getElementById("dice-result");
+        const diceMsg = document.getElementById("popup-message");
         const rollDiceButton = document.getElementById("roll-dice");
         const currentPlayerDisplay = document.getElementById("current-player");
 
@@ -149,8 +150,8 @@
         ];
         let currentPlayerIndex = 0;
 
-        const ladders = { 3: 22, 5: 8, 11: 26, 20: 29 , 60: 62, 72: 77 , 86: 91, 50:53};
-        const snakes = { 17: 4, 19: 7, 24: 16, 32: 30, 94: 84, 79: 76, 64: 56, 63: 51, 46:44 };
+        const ladders = { 3: 22, 5: 8, 11: 26, 20: 29, 60: 62, 72: 77, 86: 91, 50: 53 };
+        const snakes = { 17: 4, 19: 7, 24: 16, 32: 30, 94: 84, 79: 76, 64: 56, 63: 51, 46: 44 };
 
         function createBoard() {
             for (let i = 1; i <= 100; i++) {
@@ -174,7 +175,7 @@
 
         function rollDice() {
             dicePopup.style.display = "block";
-
+            rollDiceButton.disabled = true;
             let counter = 0;
             const interval = setInterval(() => {
                 const randomNum = Math.floor(Math.random() * 6) + 1;
@@ -186,6 +187,7 @@
                     diceImage.src = `https://semicon.github.io/SnakesandLadders/img/dice${diceRoll}.png`;
                     setTimeout(() => {
                         dicePopup.style.display = "none";
+                        rollDiceButton.disabled = false;
                         movePlayer(players[currentPlayerIndex], diceRoll);
                     }, 1500);
                 }
@@ -195,8 +197,23 @@
         function movePlayer(player, steps) {
             let nextPosition = player.position + steps;
             if (nextPosition > 100) nextPosition = player.position;
-            if (ladders[nextPosition]) nextPosition = ladders[nextPosition];
-            if (snakes[nextPosition]) nextPosition = snakes[nextPosition];
+            if (ladders[nextPosition]) {
+
+                //alert(`ขึ้นบันได! ไปที่ช่อง ${ladders[nextPosition]}`);
+                const img = "https://cdn-icons-png.flaticon.com/128/3989/3989545.png";
+                const msg = `ขึ้นบันได! <br> ไปที่ช่อง <span style="color:#ef9708;"><strong> ${ladders[nextPosition]}</strong></span>`;
+                popupAlert({img:img, msg:msg})
+
+                nextPosition = ladders[nextPosition]
+            }
+            if (snakes[nextPosition]) {
+                //alert(`เจองู! ถอยไปที่ช่อง ${snakes[nextPosition]}`);
+                const img = "https://cdn-icons-png.flaticon.com/128/5375/5375695.png";
+                const msg = `เจองู! <br> ถอยไปที่ช่อง <span style="color:#ef9708;"><strong> ${snakes[nextPosition]}</strong></span>`;
+                popupAlert({img:img, msg:msg})
+
+                nextPosition = snakes[nextPosition]
+            }
 
             const playerMarker = document.createElement("div");
             playerMarker.classList.add("player", player.color);
@@ -206,11 +223,15 @@
             board.children[player.position - 1]?.appendChild(playerMarker);
 
             if (player.position === 100) {
-                alert(`${player.name} ชนะเกมแล้ว!`);
+                //alert(`${player.name} ชนะเกมแล้ว!`);
                 rollDiceButton.disabled = true;
+                const img = "https://cdn-icons-png.flaticon.com/128/14861/14861055.png";
+                const msg = `<span style="color:#ef9708;">${player.name}</span><br> ชนะเกมแล้ว!`;
+                popupAlert({img:img, msg:msg, success:true})
             } else {
                 currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-                currentPlayerDisplay.textContent = `ผู้เล่นที่กำลังเล่น: ${players[currentPlayerIndex].name}`;
+                currentPlayerDisplay.textContent = ` ${players[currentPlayerIndex].name}`;
+                currentPlayerDisplay.style.color = players[currentPlayerIndex].color === "player-1" ? "red" : "blue"; // เปลี่ยนสีตาม player.color
             }
         }
 
@@ -218,14 +239,27 @@
 
         function startGame() {
             createBoard();
-            players.forEach(player => {
-                const marker = document.createElement("div");
-                marker.classList.add("player", player.color);
-                board.children[player.position]?.appendChild(marker);
-            });
+            currentPlayerDisplay.textContent = ` ${players[currentPlayerIndex].name}`;
+            currentPlayerDisplay.style.color = players[currentPlayerIndex].color === "player-1" ? "red" : "blue"; // เปลี่ยนสีตาม player.color
         }
 
         startGame();
+
+        function popupAlert(res){
+            dicePopup.style.display = "block";
+            diceImage.src= res.img;
+            diceMsg.innerHTML = res.msg;
+            rollDiceButton.disabled = true;
+            setTimeout(() => {
+                dicePopup.style.display = "none";
+                diceImage.src=`https://semicon.github.io/SnakesandLadders/img/dice1.png`
+                diceMsg.innerHTML = `กำลังทอยลูกเต๋า...`
+                rollDiceButton.disabled = false;
+                if(res.success){
+                    location.reload()
+                }
+            }, 5000);
+        }
     </script>
 </body>
 
