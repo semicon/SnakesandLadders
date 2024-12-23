@@ -68,6 +68,11 @@
             background-size: cover;
         }
 
+        .win {
+            background-image: url('https://cdn-icons-png.flaticon.com/128/14861/14861055.png');
+            background-size: cover;
+        }
+
         .popup {
             display: none;
             position: fixed;
@@ -226,6 +231,9 @@
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.textContent = i;
+                if(i===totalCells){
+                    cell.classList.add('win');
+                }
                 if (snakes[i]) {
                     cell.classList.add('snake');
                 }
